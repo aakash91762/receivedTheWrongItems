@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Inter"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="background-color: #eeeeee">
+    <style>
+      body {
+        font-family: "Inter";
+        text-align: center;
+
+      }
+      input {
+        height: 2em;
+        width: 20em;
+        vertical-align: middle;
+
+      }
+      label {
+        color: black;
+      }
+      p {
+        text-align: justify;
+      }
+      .container {
+        width: 95%;
+        background-color: #eeeeee;
+        font-size: 12px;
+        text-align: left;
+        /* text-align: center; */
+      }
+      .input {
+        margin: 5px 0px;
+        padding: 1px 10px;
+        border: 1px solid #eeeeee;
+        border-radius: 5px;
+        outline: 0;
+        height: 25px;
+        width: 100%;
+        font-size: 12px;
+        /* background-color: #f5f5f5; */
+        /* color: #666; */
+      }
+      .custom-select {
+        margin: 5px 0px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1px solid #eeeeee;
+        height: 30px;
+        width: 100%;
+        font-size: 12px;
+        font-family: "Inter";
+      }
+      .input:focus {
+        border: 1px solid #dd0150;
+      }
+      .custom-select:focus {
+        border: 1px solid #dd0150;
+      }
+      .submit {
+        background-color: #dd0150;
+        padding: 15px;
+        width: 100%;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        border: none;
+        color: white;
+        height: 45px;
+        margin-top: 4rem;
+      }
+      .submit:hover {
+        background-color: #f74586;
+      }
+      .result {
+        font-weight: bold;
+        margin: 10px 0px 20px;
+      }
+      .checkbox-group {
+        margin: 5px 0px;
+        padding: 10px;
+        border: 1px solid #eeeeee;
+        border-radius: 5px;
+        background-color: white;
+        width: 100%;
+        /* font-size: 10%; */
+
+      }
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 100%;
+      }
+      .checkbox-item {
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+
+      }
+      .checkbox-item input[type="checkbox"] {
+        width: auto;
+        height: auto;
+        margin-right: 8px;
+      }
+      .checkbox-item label {
+        margin: 0;
+        cursor: pointer;
+        flex: 1;
+
+      }
+      .free-text{
+    min-height: 2em;
+    padding-top: 10px;
+      }
+    </style>
+    <center>
+      <div class="container">
+        <label id="header"></label> <br /><br />
+        <form>
+          <label id="lOrderNumber"></label><br />
+          <input
+            class="input"
+            id="orderNumber"
+            type="text"
+            value=""
+            name="orderNumber"
+            required
+            readonly
+          />
+          <div id="rOrderNumber" class="result"></div>
+
+          <label id="lIssue"></label><br />
+          <input
+            class="input"
+            id="issue"
+            type="text"
+            value=""
+            name="issue"
+            required
+            readonly
+          />
+          <div id="rIssue" class="result"></div>
+
+          <label id="lChooseItem"></label><br />
+          <div class="checkbox-group" id="itemCheckboxGroup"></div>
+          <div id="rItems" class="result"></div>
+
+          <label id="lDescription"></label><br />
+          <input
+          class="input"
+          id="description"
+          type="text"
+          value=""
+          name="description"
+          required
+        />
+          <div id="rDescription" class="result"></div>
+
+          <input type="hidden" id="language" name="language" value="en" required/>
+          <button id="submit" class="submit" type="submit"></button>
+        </form>
+      </div>
+    </center>
+
+    <script type="text/javascript">
+      let params = new URLSearchParams(window.location.search);
+      var language = params.get("language");
+      var orderNumber = params.get("orderNumber");
+      var issue = params.get("issue");
+      var items = params.get("items");
+      var description = params.get("description");
+
+      document
+        .getElementById("orderNumber")
+        .setAttribute("value", orderNumber || "");
+      document.getElementById("issue").setAttribute("value", issue || "");
+
+      // ✅ Dynamic checkbox creation
+      function createCheckboxes(values) {
+        const container = document.getElementById("itemCheckboxGroup");
+        container.innerHTML = "";
+
+        values.forEach((value, index) => {
+          const div = document.createElement("div");
+          div.classList.add("checkbox-item");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = "item" + index;
+          checkbox.name = "items";
+          checkbox.value = value;
+          checkbox.checked = false; // not checked by default
+
+          const label = document.createElement("label");
+          label.setAttribute("for", "item" + index);
+          label.textContent = value;
+
+          div.appendChild(checkbox);
+          div.appendChild(label);
+          container.appendChild(div);
+        });
+      }
+  //     // ✅ Check if at least one checkbox is selected
+  //     if (selectedItems.length === 0) {
+  //   alert(language === "id"
+  //     ? "Silakan pilih minimal satu item"
+  //     : "Please select at least one item");
+  //   return; // stop form submission
+  // }
+      // ✅ Read items from URL param "selected"
+      const selectedFromUrl = params.get("selected")
+        ? params.get("selected").split(",")
+        : []; // fallback default
+
+      createCheckboxes(selectedFromUrl);
+
+      // ✅ Populate view mode if already submitted
+      if (orderNumber && issue && items && description) {
+        let o = document.getElementById("orderNumber");
+        let i = document.getElementById("issue");
+        let checkboxGroup = document.getElementById("itemCheckboxGroup");
+        let d = document.getElementById("description");
+        let s = document.getElementById("submit");
+
+        o.setAttribute("type", "hidden");
+        i.hidden = true;
+        checkboxGroup.hidden = true;
+        d.hidden = true;
+        s.style.visibility = "hidden";
+
+        document.getElementById("rOrderNumber").innerHTML = orderNumber;
+        document.getElementById("rIssue").innerHTML = issue;
+        document.getElementById("rItems").innerHTML = items.replace(/,/g, ", ");
+        document.getElementById("rDescription").innerHTML = description;
+
+        let sendData = {
+          orderNumber,
+          issue,
+          items: items.split(","),
+          description,
+        };
+        myFunction(sendData);
+      }
+
+      // ✅ Language setup
+      if (language == "id") {
+        document.getElementById("header").innerHTML =
+          "Lengkapi informasi berikut untuk melaporkan masalah.";
+        document.getElementById("lOrderNumber").innerHTML = "Nomor Pesanan:";
+        document.getElementById("lIssue").innerHTML = "Masalah:";
+        document.getElementById("lChooseItem").innerHTML =
+          "Pilih Barang yang Bermasalah:";
+        document.getElementById("lDescription").innerHTML = "Jelaskan Masalah:";
+        document.getElementById("description").placeholder = "Jelaskan Masalah";
+        document.getElementById("submit").innerHTML = "Kirim";
+        document.getElementById("language").setAttribute("value", "id");
+      } else {
+        document.getElementById("header").innerHTML =
+          "Please share the following information to report an issue.";
+        document.getElementById("lOrderNumber").innerHTML = "Order Number:";
+        document.getElementById("lIssue").innerHTML = "Issue:";
+        document.getElementById("lChooseItem").innerHTML =
+          "Choose the item with an issue:";
+        document.getElementById("lDescription").innerHTML =
+          "Tell us what’s going on:";
+        document.getElementById("description").placeholder =
+          "Tell us what’s going on";
+        document.getElementById("submit").innerHTML = "Submit";
+        document.getElementById("language").setAttribute("value", "en");
+      }
+
+      
+document.querySelector("form").addEventListener("submit", function (e) {
+  e.preventDefault(); // stop reload if required checks are passed
+ 
+
+  const orderNum = document.getElementById("orderNumber").value;
+  const selectedIssue = document.getElementById("issue").value;
+  const checkboxes = document.querySelectorAll('input[name="items"]:checked');
+  const selectedItems = Array.from(checkboxes).map((cb) => cb.value);
+  const problemDescription = document
+    .getElementById("description")
+    .value.trim();
+
+  const urlParams = new URLSearchParams();
+  urlParams.set("orderNumber", orderNum);
+  urlParams.set("issue", selectedIssue);
+  urlParams.set("items", selectedItems.join(","));
+  urlParams.set("description", problemDescription);
+  urlParams.set("language", language);
+
+  const newUrl = window.location.pathname + "?" + urlParams.toString();
+  window.history.pushState({}, "", newUrl);
+
+  const sendData = {
+    orderNumber: orderNum,
+    issue: selectedIssue,
+    items: selectedItems,
+    description: problemDescription,
+  };
+  if (selectedItems.length === 0) {
+          alert(
+            language === "id"
+              ? "Silakan pilih minimal satu item"
+              : "Please select at least one item"
+          );
+          return;
+        }
+  myFunction(sendData);
+});
+
+
+      function myFunction(sendData) {
+        console.log(sendData);
+        let data = JSON.stringify(sendData);
+
+        document.getElementById("orderNumber").setAttribute("type", "hidden");
+        document.getElementById("issue").hidden = true;
+        document.getElementById("itemCheckboxGroup").hidden = true;
+        document.getElementById("description").hidden = true;
+        document.getElementById("submit").style.visibility = "hidden";
+
+        document.getElementById("rOrderNumber").innerHTML =
+          sendData.orderNumber;
+        document.getElementById("rIssue").innerHTML = sendData.issue;
+        document.getElementById("rItems").innerHTML = sendData.items.join(", ");
+        document.getElementById("rDescription").innerHTML =
+          sendData.description;
+
+        window.parent.postMessage(
+          JSON.stringify({
+            event_code: "ym-client-event",
+            data: JSON.stringify({
+              event: { code: new Date().getTime().toString(), data },
+            }),
+          }),
+          "*"
+        );
+        console.log(
+          JSON.stringify({
+            event_code: "ym-client-event",
+            data: JSON.stringify({
+              event: {
+                code: new Date().getTime().toString(),
+                data,
+              },
+            }),
+          })
+        );
+      }
+    </script>
+  </body>
+</html>
